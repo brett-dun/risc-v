@@ -9,7 +9,6 @@
 `include "decode.v"
 `include "register_file.v"
 `include "alu.v"
-`include "alu_codes.v"
 
 module riscv_internal(
     output [9:0] pc,
