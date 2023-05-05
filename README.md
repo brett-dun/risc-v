@@ -150,6 +150,13 @@ From Chapter 24: RV32/64G Instruction Set Listings.
 | `BLTU`      | imm | rs2 | rs1 | `110`  | imm | `1100011` |
 | `BGEU`      | imm | rs2 | rs1 | `111`  | imm | `1100011` |
 
+### U-type
+
+| instruction | imm | rd | opcode    |
+| ----------- | --- | -- | --------- |
+| `LUI`       | imm | rd | `0110111` |
+| `AUIPC`     | imm | rd | `0010111` |
+
 ### J-type
 
 | instruction | imm | rd | opcode    |
