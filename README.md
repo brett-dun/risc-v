@@ -98,38 +98,57 @@ Figure 2.4: Types of immediate produced by RISC-V instructions. The fields are l
 From Chapter 24: RV32/64G Instruction Set Listings.
 
 ### R-type
-| instruction | funct7     | rs2 | rs1 | funct3 | rd | opcode    |
-| ----------- | ---------- | --- | --- | ------ | -- | --------- |
-| `ADD`       | `00000000` | rs2 | rs1 | `000`  | rd | `0110011` |
-| `SUB`       | `01000000` | rs2 | rs1 | `000`  | rd | `0110011` |
-| `SLL`       |
-| `SLT`       |
-| `SLTU`      |
-| `XOR`       |
-| `SRL`       |
-| `SRA`       |
-| `OR`        |
-| `AND`       |
+| instruction | funct7    | rs2 | rs1 | funct3 | rd | opcode    |
+| ----------- | --------- | --- | --- | ------ | -- | --------- |
+| `ADD`       | `0000000` | rs2 | rs1 | `000`  | rd | `0110011` |
+| `SUB`       | `0100000` | rs2 | rs1 | `000`  | rd | `0110011` |
+| `SLL`       | `0000000` | rs2 | rs1 | `001`  | rd | `0110011` |
+| `SLT`       | `0000000` | rs2 | rs1 | `010`  | rd | `0110011` |
+| `SLTU`      | `0000000` | rs2 | rs1 | `011`  | rd | `0110011` |
+| `XOR`       | `0000000` | rs2 | rs1 | `100`  | rd | `0110011` |
+| `SRL`       | `0000000` | rs2 | rs1 | `101`  | rd | `0110011` |
+| `SRA`       | `0100000` | rs2 | rs1 | `101`  | rd | `0110011` |
+| `OR`        | `0000000` | rs2 | rs1 | `110`  | rd | `0110011` |
+| `AND`       | `0000000` | rs2 | rs1 | `111`  | rd | `0110011` |
 
 ### I-type
-| Instruction | imm | rs1 | funct3 | rd | opcode |
-| ----------- | --- | --- | ------ | -- | ------ |
-| `ADDI`      |
-| `SLTI`      |
-| `SLTIU`     |
-| `XORI`      |
-| `ORI`       |
-| `ANDI`      |
+| Instruction | imm | rs1 | funct3 | rd | opcode    |
+| ----------- | --- | --- | ------ | -- | --------- |
+| `ADDI`      | imm | rs1 | `000`  | rd | `0010011` |
+| `SLTI`      | imm | rs1 | `010`  | rd | `0010011` |
+| `SLTIU`     | imm | rs1 | `011`  | rd | `0010011` |
+| `XORI`      | imm | rs1 | `100`  | rd | `0010011` |
+| `ORI`       | imm | rs1 | `110`  | rd | `0010011` |
+| `ANDI`      | imm | rs1 | `111`  | rd | `0010011` |
+| `LB`        | imm | rs1 | `000`  | rd | `0000011` |
+| `LH`        | imm | rs1 | `001`  | rd | `0000011` |
+| `LW`        | imm | rs1 | `010`  | rd | `0000011` |
+| `LBU`       | imm | rs1 | `100`  | rd | `0000011` |
+| `LHU`       | imm | rs1 | `101`  | rd | `0000011` |
+| `JALR`      | imm | rs1 | `000`  | rd | `1100111` |
+
+| Instruction | imm       | shamt | rs1 | funct3 | rd | opcode    |
+| ----------- | --------- | ----- | --- | ------ | -- | --------- |
+| `SLLI`      | `0000000` | shamt | rs1 | `001`  | rd | `0010011` |
+| `SRLI`      | `0000000` | shamt | rs1 | `101`  | rd | `0010011` |
+| `SRAI`      | `0100000` | shamt | rs1 | `101`  | rd | `0010011` |
+
+### S-type
+| instruction | imm | rs2 | rs1 | funct3 | imm | opcode    |
+| ----------- | --- | --- | --- | ------ | --- | --------- |
+| `SB`        | imm | rs2 | rs1 | `000`  | imm | `0100011` |
+| `SH`        | imm | rs2 | rs1 | `001`  | imm | `0100011` |
+| `SW`        | imm | rs2 | rs1 | `010`  | imm | `0100011` |
 
 ### B-type
-| instruction | imm | rs2 | rs1 | funct3 | imm | opcode |
-| ----------- | --- | --- | --- | ------ | --- | ------ |
-| `BEQ`       |
-| `BNE`       |
-| `BLT`       |
-| `BGE`       |
-| `BLTU`      |
-| `BGEU`      |
+| instruction | imm | rs2 | rs1 | funct3 | imm | opcode    |
+| ----------- | --- | --- | --- | ------ | --- | --------- |
+| `BEQ`       | imm | rs2 | rs1 | `000`  | imm | `1100011` |
+| `BNE`       | imm | rs2 | rs1 | `001`  | imm | `1100011` |
+| `BLT`       | imm | rs2 | rs1 | `100`  | imm | `1100011` |
+| `BGE`       | imm | rs2 | rs1 | `101`  | imm | `1100011` |
+| `BLTU`      | imm | rs2 | rs1 | `110`  | imm | `1100011` |
+| `BGEU`      | imm | rs2 | rs1 | `111`  | imm | `1100011` |
 
 ### J-type
 
