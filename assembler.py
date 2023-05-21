@@ -269,21 +269,30 @@ def build_r_type(op: str, rd: str, rs1: str, rs2: str) -> int:
     return opcode + (rd_val << 7) + (funct3 << 12) + (rs1_val << 15) + (rs2_val << 20) + (funct7 << 25)
 
 
-def build_i_type(op: str, rd: str, rs1: str, imm: str) -> int:
+def build_i_type(op: str, rd: str, rs1: str, imm: int) -> int:
     if op not in i_type_ops:
         raise AssemblerError()
+    if rd not in registers:
+        raise RegisterError(f"rd='{rd}' is not a valid RISC-V register.")
+    if rs1 not in registers:
+        raise RegisterError(f"rs1='{rs1}' is not a valid RISC-V register.")
 
     op_def: ITypeFormat = i_type_ops[op]
     opcode: int = op_def['opcode']
     funct3: int = op_def['funct3']
+    rd_val: int = registers[rd]
+    rs1_val: int = registers[rs1]
 
-    # TODO
-    return 0
+    return opcode + (rd_val << 7) + (funct3 << 12) + (rs1_val << 15) + (imm << 20)
 
 
 def build_i_type_special(op: str, rd: str, rs1: str, sham: str) -> int:
     if op not in i_type_special_ops:
         raise AssemblerError()
+    if rd not in registers:
+        raise RegisterError(f"rd='{rd}' is not a valid RISC-V register.")
+    if rs1 not in registers:
+        raise RegisterError(f"rs1='{rs1}' is not a valid RISC-V register.")
 
     op_def: ITypeSpecialFormat = i_type_special_ops[op]
     opcode: int = op_def['opcode']
@@ -294,41 +303,65 @@ def build_i_type_special(op: str, rd: str, rs1: str, sham: str) -> int:
     return 0
 
 
-def build_s_type(op: str, rs1: str, rs2: str, imm: str) -> int:
+# TODO: test me
+def build_s_type(op: str, rs1: str, rs2: str, imm: int) -> int:
     if op not in s_type_ops:
         raise AssemblerError()
+    if rd not in registers:
+        raise RegisterError(f"rd='{rd}' is not a valid RISC-V register.")
+    if rs1 not in registers:
+        raise RegisterError(f"rs1='{rs1}' is not a valid RISC-V register.")
     
     op_def: STypeFormat = s_type_ops[op]
+    opcode: int = op_def['opcode']
+    funct3: int = op_def['funct3']
+    rs1_val: int = registers[rs1]
+    rs2_val: int = registers[rs2]
 
-    # TODO
-    return 0
+    return opcode + ((imm & 0b11111) << 7)  + (funct3 << 12) + (rs1_val << 15) + (rs2_val << 20) + ((imm >> 5) << 25)
 
 
-def build_b_type(op: str, rs1: str, rs2: str, imm: str) -> int:
+def build_b_type(op: str, rs1: str, rs2: str, imm: int) -> int:
     if op not in b_type_ops:
         raise AssemblerError()
+    if rs1 not in registers:
+        raise RegisterError(f"rs1='{rs1}' is not a valid RISC-V register.")
+    if rs2 not in registers:
+        raise RegisterError(f"rs2='{rs2}' is not a valid RISC-V register.")
     
     op_def: BTypeFormat = b_type_ops[op]
+    opcode: int = op_def['opcode']
+    funct3: int = op_def['funct3']
+    rs1_val: int = registers[rs1]
+    rs2_val: int = registers[rs2]
 
     # TODO
     return 0
 
 
-def build_u_type(op: str, rd: str, imm: str) -> int:
+# TODO: test me
+def build_u_type(op: str, rd: str, imm: int) -> int:
     if op not in u_type_ops:
         raise AssemblerError()
+    if rd not in registers:
+        raise RegisterError(f"rd='{rd}' is not a valid RISC-V register.")
     
     op_def: UTypeFormat = u_type_ops[op]
+    opcode: int = op_def['opcode']
+    rd_val: int = registers[rd]
 
-    # TODO
-    return 0
+    return opcode + (rd_val << 7) + ((imm >> 12) << 12)
 
 
 def build_j_type(op: str, rd: str, imm: str) -> int:
     if op not in j_type_ops:
         raise AssemblerError()
+    if rd not in registers:
+        raise RegisterError(f"rd='{rd}' is not a valid RISC-V register.")
 
     op_def: JTypeFormat = j_type_ops[op]
+    opcode: int = op_def['opcode']
+    rd_val: int = registers[rd]
 
     # TODO
     return 0
