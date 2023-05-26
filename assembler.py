@@ -304,7 +304,8 @@ def build_i_type(op: str, rd: str, rs1: str, imm: int) -> BitArray:
     return res
 
 
-def build_i_type_special(op: str, rd: str, rs1: str, sham: str) -> BitArray:
+# TODO: test me
+def build_i_type_special(op: str, rd: str, rs1: str, sham: int) -> BitArray:
     if op not in i_type_special_ops:
         raise AssemblerError()
     if rd not in registers:
@@ -313,12 +314,17 @@ def build_i_type_special(op: str, rd: str, rs1: str, sham: str) -> BitArray:
         raise RegisterError(f"rs1='{rs1}' is not a valid RISC-V register.")
 
     op_def: ITypeSpecialFormat = i_type_special_ops[op]
-    opcode: int = op_def['opcode']
-    funct3: int = op_def['funct3']
-    imm: int = op_def['imm']
+    opcode: BitArray = int_to_bit_array(op_def['opcode'], 7)
+    funct3: BitArray = int_to_bit_array(op_def['funct3'], 3)
+    rd_val: BitArray = int_to_bit_array(registers[rd], size=5)
+    rs1_val: BitArray = int_to_bit_array(registers[rs1], size=5)
+    shamt_bits: BitArray = int_to_bit_array(sham, 5)
+    imm: BitArray = int_to_bit_array(op_def['imm'], 7)
 
-    # TODO
-    return [0 for _ in range(32)]
+    res = imm + shamt_bits + rs1_val + funct3 + rd_val + opcode
+    assert len(res) == 32, f'len(res)={len(res)} (expected 32)'
+
+    return res
 
 
 # TODO: test me
