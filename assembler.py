@@ -3,7 +3,7 @@ Generate .mem files from RISC-V assembly code.
 """
 
 import sys
-from typing import Dict, Literal
+from typing import Dict, List, Literal
 
 
 class AssemblerError(RuntimeError):
@@ -56,6 +56,9 @@ registers: Dict[str, int] = {
     't5': 30,  # temporary
     't6': 31,  # temporary
 }
+
+
+BitArray = List[Literal[0, 1]]
 
 
 # TODO: in hindsight it might have been better to use a dataclass
@@ -248,7 +251,15 @@ j_type_ops: Dict[str, JTypeFormat] = {
 }
 
 
-def build_r_type(op: str, rd: str, rs1: str, rs2: str) -> int:
+def int_to_bit_array(i: int, size: int = None) -> BitArray:
+    res = [int(digit) for digit in bin(i)[2:]]
+    if size is not None:
+        while len(res) < size:
+            res.insert(0, 0)
+    return res
+
+
+def build_r_type(op: str, rd: str, rs1: str, rs2: str) -> BitArray:
     if op not in r_type_ops:
         raise AssemblerError()
     if rd not in registers:
@@ -259,17 +270,20 @@ def build_r_type(op: str, rd: str, rs1: str, rs2: str) -> int:
         raise RegisterError(f"rs2='{rs2}' is not a valid RISC-V register.")
     
     op_def: RTypeFormat = r_type_ops[op]
-    opcode: int = op_def['opcode']
-    funct3: int = op_def['funct3']
-    funct7: int = op_def['funct7']
-    rd_val: int = registers[rd]
-    rs1_val: int = registers[rs1]
-    rs2_val: int = registers[rs2]
+    opcode: BitArray = int_to_bit_array(op_def['opcode'], size=7)
+    funct3: BitArray = int_to_bit_array(op_def['funct3'], size=3)
+    funct7: BitArray = int_to_bit_array(op_def['funct7'], size=7)
+    rd_val: BitArray = int_to_bit_array(registers[rd], size=5)
+    rs1_val: BitArray = int_to_bit_array(registers[rs1], size=5)
+    rs2_val: BitArray = int_to_bit_array(registers[rs2], size=5)
 
-    return opcode + (rd_val << 7) + (funct3 << 12) + (rs1_val << 15) + (rs2_val << 20) + (funct7 << 25)
+    res = funct7 + rs2_val + rs1_val + funct3 + rd_val + opcode
+    assert len(res) == 32, f'len(res)={len(res)} (expected 32)'
+    
+    return res
 
 
-def build_i_type(op: str, rd: str, rs1: str, imm: int) -> int:
+def build_i_type(op: str, rd: str, rs1: str, imm: int) -> BitArray:
     if op not in i_type_ops:
         raise AssemblerError()
     if rd not in registers:
@@ -278,15 +292,19 @@ def build_i_type(op: str, rd: str, rs1: str, imm: int) -> int:
         raise RegisterError(f"rs1='{rs1}' is not a valid RISC-V register.")
 
     op_def: ITypeFormat = i_type_ops[op]
-    opcode: int = op_def['opcode']
-    funct3: int = op_def['funct3']
-    rd_val: int = registers[rd]
-    rs1_val: int = registers[rs1]
+    opcode: BitArray = int_to_bit_array(op_def['opcode'], size=7)
+    funct3: BitArray = int_to_bit_array(op_def['funct3'], size=3)
+    rd_val: BitArray = int_to_bit_array(registers[rd], size=5)
+    rs1_val: BitArray = int_to_bit_array(registers[rs1], size=5)
+    imm_bits: BitArray = int_to_bit_array(imm, size=12)
 
-    return opcode + (rd_val << 7) + (funct3 << 12) + (rs1_val << 15) + (imm << 20)
+    res = imm_bits + rs1_val + funct3 + rd_val + opcode
+    assert len(res) == 32, f'len(res)={len(res)} (expected 32)'
+
+    return res
 
 
-def build_i_type_special(op: str, rd: str, rs1: str, sham: str) -> int:
+def build_i_type_special(op: str, rd: str, rs1: str, sham: str) -> BitArray:
     if op not in i_type_special_ops:
         raise AssemblerError()
     if rd not in registers:
@@ -300,28 +318,33 @@ def build_i_type_special(op: str, rd: str, rs1: str, sham: str) -> int:
     imm: int = op_def['imm']
 
     # TODO
-    return 0
+    return [0 for _ in range(32)]
 
 
 # TODO: test me
-def build_s_type(op: str, rs1: str, rs2: str, imm: int) -> int:
+def build_s_type(op: str, rs1: str, rs2: str, imm: int) -> BitArray:
     if op not in s_type_ops:
         raise AssemblerError()
-    if rd not in registers:
-        raise RegisterError(f"rd='{rd}' is not a valid RISC-V register.")
     if rs1 not in registers:
-        raise RegisterError(f"rs1='{rs1}' is not a valid RISC-V register.")
+        raise RegisterError(f"rd='{rs1}' is not a valid RISC-V register.")
+    if rs2 not in registers:
+        raise RegisterError(f"rs1='{rs2}' is not a valid RISC-V register.")
     
     op_def: STypeFormat = s_type_ops[op]
-    opcode: int = op_def['opcode']
-    funct3: int = op_def['funct3']
-    rs1_val: int = registers[rs1]
-    rs2_val: int = registers[rs2]
+    opcode: BitArray = int_to_bit_array(op_def['opcode'], 7)
+    funct3: BitArray = int_to_bit_array(op_def['funct3'], 3)
+    rs1_val: BitArray = int_to_bit_array(registers[rs1], 5)
+    rs2_val: BitArray = int_to_bit_array(registers[rs2], 5)
+    imm_bits: BitArray = int_to_bit_array(imm, 12)
 
-    return opcode + ((imm & 0b11111) << 7)  + (funct3 << 12) + (rs1_val << 15) + (rs2_val << 20) + ((imm >> 5) << 25)
+    res = imm_bits[5:11+1] + rs2_val + rs1_val + funct3 + imm_bits[0:4+1] + opcode
+    assert len(res) == 32, f'len(res)={len(res)} (expected 32)'
+
+    return res
 
 
-def build_b_type(op: str, rs1: str, rs2: str, imm: int) -> int:
+# TODO: test me
+def build_b_type(op: str, rs1: str, rs2: str, imm: int) -> BitArray:
     if op not in b_type_ops:
         raise AssemblerError()
     if rs1 not in registers:
@@ -330,48 +353,58 @@ def build_b_type(op: str, rs1: str, rs2: str, imm: int) -> int:
         raise RegisterError(f"rs2='{rs2}' is not a valid RISC-V register.")
     
     op_def: BTypeFormat = b_type_ops[op]
-    opcode: int = op_def['opcode']
-    funct3: int = op_def['funct3']
-    rs1_val: int = registers[rs1]
-    rs2_val: int = registers[rs2]
+    opcode: BitArray = int_to_bit_array(op_def['opcode'], 7)
+    funct3: BitArray = int_to_bit_array(op_def['funct3'], 3)
+    rs1_val: BitArray = int_to_bit_array(registers[rs1], 5)
+    rs2_val: BitArray = int_to_bit_array(registers[rs2], 5)
+    imm_bits: BitArray = int_to_bit_array(imm, 13)
 
-    # TODO
-    return 0
+    res = [imm_bits[12]] + imm_bits[5:10+1] + rs2_val + rs1_val + funct3 + imm_bits[1:4+1] + [imm_bits[11]] + opcode
+    assert len(res) == 32, f'len(res)={len(res)} (expected 32)'
+
+    return res
 
 
 # TODO: test me
-def build_u_type(op: str, rd: str, imm: int) -> int:
+def build_u_type(op: str, rd: str, imm: int) -> BitArray:
     if op not in u_type_ops:
         raise AssemblerError()
     if rd not in registers:
         raise RegisterError(f"rd='{rd}' is not a valid RISC-V register.")
     
     op_def: UTypeFormat = u_type_ops[op]
-    opcode: int = op_def['opcode']
-    rd_val: int = registers[rd]
+    opcode: BitArray = int_to_bit_array(op_def['opcode'], 7)
+    rd_val: BitArray = int_to_bit_array(registers[rd], 5)
+    imm_bits: BitArray = int_to_bit_array(imm, 32)
 
-    return opcode + (rd_val << 7) + ((imm >> 12) << 12)
+    res = imm_bits[12:31+1] + rd_val + opcode
+    assert len(res) == 32, f'len(res)={len(res)} (expected 32)'
+
+    return res
 
 
-def build_j_type(op: str, rd: str, imm: str) -> int:
+def build_j_type(op: str, rd: str, imm: int) -> BitArray:
     if op not in j_type_ops:
         raise AssemblerError()
     if rd not in registers:
         raise RegisterError(f"rd='{rd}' is not a valid RISC-V register.")
 
     op_def: JTypeFormat = j_type_ops[op]
-    opcode: int = op_def['opcode']
-    rd_val: int = registers[rd]
+    opcode: BitArray = int_to_bit_array(op_def['opcode'], 7)
+    rd_val: BitArray = int_to_bit_array(registers[rd], 5)
+    imm_bits: BitArray = int_to_bit_array(imm, 21)
 
-    # TODO
-    return 0
+    res = [imm_bits[20]] + imm_bits[1:10+1] + [imm_bits[11]] + imm_bits[12:19+1] + rd_val + opcode
+    assert len(res) == 32, f'len(res)={len(res)} (expected 32)'
+
+    return res
 
 
 if __name__ == "__main__":
     fname_in = sys.argv[1]
     fname_out = 'riscv.mem' if len(sys.argv) < 3 else sys.argv[2]
 
-    obj_code = []
+    obj_code: List[BitArray] = []
 
     with open(fname_in, encoding='utf-8') as f:
         for lino, line in enumerate(f.readlines()):
@@ -398,9 +431,10 @@ if __name__ == "__main__":
 
     # Instruction memory expects 128 instructions.
     while len(obj_code) < 128:
-        obj_code.append(0)
+        obj_code.append([0 for _ in range(32)])
 
     with open(fname_out, 'w', encoding='utf-8') as wf:
         for x in obj_code:
-            s = f'{x:08x}'
+            num = int(''.join(str(d) for d in x), 2)
+            s = f'{num:08x}'
             wf.write(s+'\n')
