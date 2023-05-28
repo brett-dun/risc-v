@@ -22,7 +22,9 @@ class RegisterError(AssemblerError):
 
 
 registers: Dict[str, int] = {
+    'x0': 0,
     'zero': 0, # hard-wired zero
+    'x1': 1,
     'ra': 1,   # return address
     'sp': 2,   # stack pointer
     'gp': 3,   # global pointer
@@ -432,8 +434,84 @@ if __name__ == "__main__":
             elif op in j_type_ops:
                 raise NotImplementedError()
             else:
-                # TODO: handle pseduo-instructions
-                print(f"'{instr[0]}' not recognized.")
+                # handle pseudo-instructions
+                if op == 'nop':
+                    obj_code.append(build_i_type('addi', 'x0', 'x0', 0))
+                elif op == 'li':
+                    raise NotImplementedError()
+                elif op == 'mv':
+                    rd, rs = instr.split(', ')
+                    obj_code.append(build_i_type('addi', rd, rs, 0))
+                elif op == 'not':
+                    rd, rs = instr.split(', ')
+                    obj_code.append(build_i_type('xori', rd, rs, -1))
+                elif op == 'neg':
+                    rd, rs = instr.split(', ')
+                    obj_code.append(build_r_type('sub', rd, 'x0', rs))
+                elif op == 'negw':
+                    raise NotImplementedError()
+                elif op == 'sext.w':
+                    raise NotImplementedError()
+                elif op == 'seqz':
+                    rd, rs = instr.split(', ')
+                    obj_code.append(build_i_type('sltiu', rd, rs, 1))
+                elif op == 'snez':
+                    rd, rs = instr.split(', ')
+                    obj_code.append(build_r_type('sltu', rd, 'x0', rs))
+                elif op == 'sltz':
+                    rd, rs = instr.split(', ')
+                    obj_code.append(build_r_type('slt', rd, rs, 'x0'))
+                elif op == 'sgtz':
+                    rd, rs = instr.split(', ')
+                    obj_code.append(build_r_type('slt', rd, 'x0', rs))
+                elif op == 'beqz':
+                    rs, offset = instr.split(', ')
+                    obj_code.append(build_b_type('beq', rs, 'x0', offset))
+                elif op == 'bnez':
+                    rs, offset = instr.split(', ')
+                    obj_code.append(build_b_type('bne', rs, 'x0', offset))
+                elif op == 'blez':
+                    rs, offset = instr.split(', ')
+                    obj_code.append(build_b_type('bge', 'x0', rs, offset))
+                elif op == 'bgez':
+                    rs, offset = instr.split(', ')
+                    obj_code.append(build_b_type('bge', rs, 'x0', offset))
+                elif op == 'bltz':
+                    rs, offset = instr.split(', ')
+                    obj_code.append(build_b_type('blt', rs, 'x0', offset))
+                elif op == 'bgtz':
+                    rs, offset = instr.split(', ')
+                    obj_code.append(build_b_type('blt', 'x0', rs, offset))
+                elif op == 'bgt':
+                    rs, rt, offset = instr.split(', ')
+                    obj_code.append(build_b_type('blt', rt, rs, offset))
+                elif op == 'ble':
+                    rs, rt, offset = instr.split(', ')
+                    obj_code.append(build_b_type('bge', rt, rs, offset))
+                elif op == 'bgtu':
+                    rs, rt, offset = instr.split(', ')
+                    obj_code.append(build_b_type('bltu', rt, rs, offset))
+                elif op == 'bleu':
+                    rs, rt, offset = instr.split(', ')
+                    obj_code.append(build_b_type('bgeu', rt, rs, offset))
+                elif op == 'j':
+                    offset = instr
+                    obj_code.append(build_j_type('jal', 'x0', offset))
+                elif op == 'jal':
+                    raise NotImplementedError()
+                elif op == 'jr':
+                    rs = instr
+                    obj_code.append(build_i_type('jalr', 'x0', rs, 0))
+                elif op == 'jalr':
+                    raise NotImplementedError()
+                elif op == 'ret':
+                    obj_code.append(build_i_type('jalr', 'x0', 'x1', 0))
+                elif op == 'call':
+                    raise NotImplementedError()
+                elif op == 'tail':
+                    raise NotImplementedError()
+                else:
+                    raise AssemblerError(f"'{instr[0]}' not recognized.")
 
     # Instruction memory expects 128 instructions.
     while len(obj_code) < 128:
