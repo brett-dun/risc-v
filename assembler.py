@@ -422,23 +422,32 @@ if __name__ == "__main__":
                 rd, rs1, rs2 = instr.split(', ')
                 obj_code.append(build_r_type(op, rd, rs1, rs2))
             elif op in i_type_ops:
-                raise NotImplementedError()
+                rd, rs1, imm = instr.split(', ')
+                imm = int(imm)
+                obj_code.append(build_i_type(op, rd, rs1, imm))
             elif op in i_type_special_ops:
                 raise NotImplementedError()
             elif op in s_type_ops:
-                raise NotImplementedError()
+                raise NotImplementedError('s-type instructions are not implemented yet.')
             elif op in b_type_ops:
-                raise NotImplementedError()
+                rs1, rs2, offset = instr.split(', ')
+                offset = int(offset)
+                obj_code.append(build_b_type(op, rs1, rs2, offset))
             elif op in u_type_ops:
-                raise NotImplementedError()
+                rd, imm = instr.split(', ')
+                imm = int(imm)
+                obj_code.append(build_u_type(op, rd, imm))
             elif op in j_type_ops:
-                raise NotImplementedError()
+                raise NotImplementedError('j-type instructions are not implemented yet.')
             else:
                 # handle pseudo-instructions
                 if op == 'nop':
                     obj_code.append(build_i_type('addi', 'x0', 'x0', 0))
                 elif op == 'li':
-                    raise NotImplementedError()
+                    # TODO: Implement this using some combination of lui + addi.
+                    #   The exact instructions needed will depend on the specific
+                    #   value of the immediate value being loaded.
+                    raise NotImplementedError('li is not implemented yet.')
                 elif op == 'mv':
                     rd, rs = instr.split(', ')
                     obj_code.append(build_i_type('addi', rd, rs, 0))
@@ -449,9 +458,9 @@ if __name__ == "__main__":
                     rd, rs = instr.split(', ')
                     obj_code.append(build_r_type('sub', rd, 'x0', rs))
                 elif op == 'negw':
-                    raise NotImplementedError()
+                    raise NotImplementedError('negw is not implemented yet.')
                 elif op == 'sext.w':
-                    raise NotImplementedError()
+                    raise NotImplementedError('sext.w is not implemented yet.')
                 elif op == 'seqz':
                     rd, rs = instr.split(', ')
                     obj_code.append(build_i_type('sltiu', rd, rs, 1))
@@ -507,9 +516,15 @@ if __name__ == "__main__":
                 elif op == 'ret':
                     obj_code.append(build_i_type('jalr', 'x0', 'x1', 0))
                 elif op == 'call':
-                    raise NotImplementedError()
+                    # TODO: implement
+                    # auipc x1, offset[31 : 12] + offset[11]
+                    # jalr x1, offset[11:0](x1)
+                    raise NotImplementedError('call is not implemented yet.')
                 elif op == 'tail':
-                    raise NotImplementedError()
+                    # TODO: implement
+                    # auipc x6, offset[31 : 12] + offset[11]
+                    # jalr x0, offset[11:0](x6)
+                    raise NotImplementedError('tail is not implemented yet.')
                 else:
                     raise AssemblerError(f"'{instr[0]}' not recognized.")
 
