@@ -408,6 +408,10 @@ def build_j_type(op: str, rd: str, imm: int) -> BitArray:
     return res
 
 
+def bit_array_to_int(x: BitArray) -> int:
+    return int(''.join(str(d) for d in x), 2)
+
+
 if __name__ == "__main__":
     fname_in = sys.argv[1]
     fname_out = 'riscv.mem' if len(sys.argv) < 3 else sys.argv[2]
